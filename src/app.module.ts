@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TodoModule } from './todo/todo.module';
-import { Todo } from './todo/todo.entity';
+// import { Todo } from './todo/todo.entity';
 
 @Module({
   imports: [
@@ -16,10 +16,10 @@ import { Todo } from './todo/todo.entity';
       username: process.env.DB_USERNAME || 'admin_user',
       password: process.env.DB_PASSWORD || 'Admin@$786',
       database: process.env.DB_NAME || 'todo_db',
-      entities: [Todo],
+      // entities: [Todo],
       autoLoadEntities: true,
-      logging: false,
-      synchronize: true, // ❌ not for production, good for dev
+      logging: true,
+      synchronize: process.env.MODE == 'DEV' ? true : false, // ❌ not for production, good for dev
     }),
     TodoModule,
   ],
