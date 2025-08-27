@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { RouterModule } from '@nestjs/core';
+// import { RouterModule } from '@nestjs/core';
 import { TodoModule } from './todo/todo.module';
 // import { Todo } from './todo/todo.entity';
 import { UserModule } from './user/user.module';
@@ -24,15 +24,12 @@ import { AuthModule } from './auth/auth.module';
       logging: true,
       synchronize: process.env.MODE === 'DEV', // ❌ don't use in production
     }),
-    RouterModule.register([
-      {
-        path: 'api/v1',
-        children: [
-          { path: 'todos', module: TodoModule },
-          { path: 'users', module: UserModule },
-        ],
-      },
-    ]),
+    // RouterModule.register([
+    //   {
+    //     path: 'api/v1',
+    //     children: [{ path: 'todos', module: TodoModule }],
+    //   },
+    // ]),
     TodoModule,
     UserModule,
     AuthModule,

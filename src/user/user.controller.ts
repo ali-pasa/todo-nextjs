@@ -16,14 +16,15 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user-dto';
 
 @UseGuards(JwtAuthGuard)
-@Controller() // 👈 RouterModule already mounts at /api/v1/users
+@Controller('users') // 👈 RouterModule already mounts at /api/v1/users
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   // ✅ Create new user (Admin only)
   @Post()
   async create(@Req() req, @Body() dto: CreateUserDto) {
-    if (req.user.role !== 'Admin') {
+    console.log('User Role: ', req.user.role);
+    if (req.user.role !== 'admin') {
       throw new ForbiddenException('Only admins can create new users');
     }
     return this.userService.create(dto);
@@ -32,22 +33,26 @@ export class UserController {
   // ✅ Logged-in user profile
   @Get('profile')
   getProfile(@Req() req) {
+    console.log('User Role: ', req.user);
     return req.user;
   }
 
-  // ✅ Get all users (Admin only)
+  // ✅ Get all users (admin only)
   @Get()
   async getAll(@Req() req) {
-    if (req.user.role !== 'Admin') {
+    console.log('User Role: ', req.user);
+    if (req.user.role !== 'admin') {
       throw new ForbiddenException('Only admins can view all users');
     }
     return this.userService.findAll();
   }
 
-  // ✅ Get user by id (Admin or Self)
+  // ✅ Protect this route
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getUser(@Param('id') id: string, @Req() req) {
-    if (req.user.role !== 'Admin' && req.user.id !== parseInt(id)) {
+    console.log('User Role: ', req.user);
+    if (req.user.role !== 'admin' && req.user.id !== parseInt(id)) {
       throw new ForbiddenException('You can only access your own data');
     }
     return this.userService.findOne(+id);
@@ -59,10 +64,10 @@ export class UserController {
     return this.userService.update(req.user.id, dto);
   }
 
-  // ✅ Delete user (Admin only)
+  // ✅ Delete user (admin only)
   @Delete(':id')
   async remove(@Param('id') id: string, @Req() req) {
-    if (req.user.role !== 'Admin') {
+    if (req.user.role !== 'admin') {
       throw new ForbiddenException('Only admins can delete users');
     }
     return this.userService.remove(+id);

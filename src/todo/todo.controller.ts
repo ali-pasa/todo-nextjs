@@ -19,7 +19,7 @@ import { UpdateTodoDto } from './dto/update-todo.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)
-@Controller() // 👈 give a proper route prefix
+@Controller('todos') // 👈 give a proper route prefix
 export class TodoController {
   constructor(private readonly todoService: TodoService) {}
 
