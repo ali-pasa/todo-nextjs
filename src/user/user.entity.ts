@@ -23,6 +23,12 @@ export class User {
   @Column({ default: 'user' }) // roles: "user" | "admin"
   role: string;
 
+  @Column({ unique: true })
+  email: string;
+
+  @Column({ unique: true })
+  mobileno: string;
+
   @OneToMany(() => Todo, (todo) => todo.user)
   todos: Todo[];
 
