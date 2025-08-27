@@ -7,6 +7,7 @@ async function bootstrap() {
 
   // Enable CORS for frontend integration
   app.enableCors();
+  // app.setGlobalPrefix('api'); // All routes become /api/...
 
   // Global validation pipe
   app.useGlobalPipes(

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { RouterModule } from '@nestjs/core';
 import { TodoModule } from './todo/todo.module';
 // import { Todo } from './todo/todo.entity';
 
@@ -19,8 +20,14 @@ import { TodoModule } from './todo/todo.module';
       // entities: [Todo],
       autoLoadEntities: true,
       logging: true,
-      synchronize: process.env.MODE == 'DEV' ? true : false, // ❌ not for production, good for dev
+      synchronize: process.env.MODE === 'DEV', // ❌ don't use in production
     }),
+    RouterModule.register([
+      {
+        path: 'api/v1',
+        children: [{ path: 'todos', module: TodoModule }],
+      },
+    ]),
     TodoModule,
   ],
 })
