@@ -8,67 +8,61 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { User } from '../user/user.entity';
+import { CreateUserDto } from './dto/create-user.dto'; // corrected filename
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private jwtService: JwtService,
-    @InjectRepository(User) private usersRepo: Repository<User>,
+    private readonly jwtService: JwtService,
+    @InjectRepository(User)
+    private readonly usersRepo: Repository<User>,
   ) {}
 
-  async register(
-    username: string,
-    password: string,
-    email: string,
-    mobileno: string,
-  ): Promise<User> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const hashed = await bcrypt.hash(password, 10);
+  async register(createUserDto: CreateUserDto): Promise<User> {
+    const { username, email, mobileno, password } = createUserDto;
+
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = this.usersRepo.create({
       username,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      password: hashed,
       email,
       mobileno,
+      password: hashedPassword,
     });
 
     try {
       return await this.usersRepo.save(user);
-    } catch (error) {
-      // type-safe cast for DB errors
-      const err = error as { code?: string; detail?: string; message?: string };
-
+    } catch (error: any) {
       // PostgreSQL unique violation
-      if (err.code === '23505') {
-        if (err.detail?.includes('email')) {
+      if (error.code === '23505') {
+        if (error.detail?.includes('email')) {
           throw new ConflictException('Email already exists');
         }
-        if (err.detail?.includes('mobileno')) {
+        if (error.detail?.includes('mobileno')) {
           throw new ConflictException('Mobile number already exists');
         }
-        if (err.detail?.includes('username')) {
+        if (error.detail?.includes('username')) {
           throw new ConflictException('Username already exists');
         }
         throw new ConflictException('User already exists');
       }
 
       // MySQL unique violation
-      if (err.code === 'ER_DUP_ENTRY') {
-        if (err.message?.includes('email')) {
+      if (error.code === 'ER_DUP_ENTRY') {
+        if (error.message?.includes('email')) {
           throw new ConflictException('Email already exists');
         }
-        if (err.message?.includes('mobileno')) {
+        if (error.message?.includes('mobileno')) {
           throw new ConflictException('Mobile number already exists');
         }
-        if (err.message?.includes('username')) {
+        if (error.message?.includes('username')) {
           throw new ConflictException('Username already exists');
         }
         throw new ConflictException('User already exists');
       }
 
-      throw new InternalServerErrorException();
+      throw new InternalServerErrorException('Failed to create user');
     }
   }
 
@@ -77,13 +71,18 @@ export class AuthService {
     password: string,
   ): Promise<{ access_token: string }> {
     const user = await this.usersRepo.findOne({ where: { username } });
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) throw new UnauthorizedException('Invalid credentials');
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
     const payload = { sub: user.id, role: user.role };
-    return { access_token: this.jwtService.sign(payload) };
+    const access_token = this.jwtService.sign(payload);
+
+    return { access_token };
   }
 }

@@ -27,7 +27,10 @@ import { AuthModule } from './auth/auth.module';
     RouterModule.register([
       {
         path: 'api/v1',
-        children: [{ path: 'todos', module: TodoModule }],
+        children: [
+          { path: 'todos', module: TodoModule },
+          { path: 'users', module: UserModule },
+        ],
       },
     ]),
     TodoModule,
